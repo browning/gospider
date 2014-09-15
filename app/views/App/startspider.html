@@ -1,0 +1,21 @@
+{{template "header.html" .}}
+
+<script>
+	$( document ).ready(function() {
+		 // check the status of the spider evry second
+		 function get_status() {
+		 	$.get( "/spider_status", function( data ) {
+			    $( ".status" ).append( data );
+			    get_status();
+			 });
+
+		 }
+		 get_status();
+	});
+</script>
+
+
+<p>starting the spider...</p>
+
+<div class="status">
+</div>

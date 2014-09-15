@@ -6,6 +6,7 @@ module:testrunner
 
 GET     /                                       App.Index
 POST    /spider                                 App.StartSpider
+GET     /spider_status                          App.SpiderStatus
 
 # Ignore favicon requests
 GET     /favicon.ico                            404
