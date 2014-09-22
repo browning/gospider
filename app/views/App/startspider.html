@@ -10,6 +10,11 @@
 			 });
 
 		 }
+
+		 $.get("/spider_done", function(data) {
+		 	$(".status").append(data);
+		 });
+
 		 get_status();
 	});
 </script>
