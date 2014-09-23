@@ -86,3 +86,7 @@ func (c App) SpiderDone() revel.Result {
 	wg.Wait()
 	return c.RenderText("spidering is complete")
 }
+
+func (c App) View() revel.Result {
+	return c.Render()
+}

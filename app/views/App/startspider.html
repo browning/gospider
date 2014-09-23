@@ -13,6 +13,7 @@
 
 		 $.get("/spider_done", function(data) {
 		 	$(".status").append(data);
+		 	window.location = "/view";
 		 });
 
 		 get_status();
