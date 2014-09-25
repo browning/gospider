@@ -87,6 +87,15 @@ func (c App) SpiderDone() revel.Result {
 	return c.RenderText("spidering is complete")
 }
 
+type StandardResult struct {
+    URL        string
+}
+
 func (c App) View() revel.Result {
-	return c.Render()
+	container := []StandardResult{}
+	for k, _ := range scrape_results { 
+		res := StandardResult{k}
+		container = append(container, res)
+	}
+	return c.Render(container)
 }

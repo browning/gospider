@@ -1,1 +1,24 @@
-<p>view your scan here</p>
+
+{{set . "title" "Home"}}
+{{template "header.html" .}}
+
+
+<div class="container">
+  <div class="row">
+   
+    <table class="table">
+    	{{range .container}}
+
+		<tr>
+		<td>{{.URL}}</td>
+		</tr>
+		{{end}}
+    </table>
+
+  </div>
+</div>
+
+{{template "footer.html" .}}
+
+
+
