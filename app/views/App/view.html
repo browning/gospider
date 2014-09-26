@@ -3,10 +3,24 @@
 {{template "header.html" .}}
 
 
+<script>
+	$( document ).ready(function() {
+		$('#spiderdata').dataTable( {
+            "scrollX": true
+    	} );
+	});
+</script>
+<br /><br />
+
 <div class="container">
   <div class="row">
    
-    <table class="table">
+    <table id="spiderdata" class="table">
+    	<thead>
+                        <tr>
+                            <th>URL</th>
+                        </tr>
+        </thead>
     	{{range .container}}
 
 		<tr>
