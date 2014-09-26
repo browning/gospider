@@ -19,12 +19,16 @@
     	<thead>
                         <tr>
                             <th>URL</th>
+                            <th>Status Code</th>
+                            <th>Content Length</th>
                         </tr>
         </thead>
     	{{range .container}}
 
 		<tr>
 		<td>{{.URL}}</td>
+		<td>{{.StatusCode}}</td>
+		<td>{{.ContentLength}}</td>
 		</tr>
 		{{end}}
     </table>

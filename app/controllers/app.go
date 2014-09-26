@@ -6,18 +6,24 @@ import "net/http"
 import urlhelpers "net/url"
 import "code.google.com/p/go.net/html"
 import "sync"
+import "io/ioutil"
+
+type URLData struct {
+    URL        string
+    Body       string
+    StatusCode int
+    ContentLength int
+}
 
 var messages = make(chan string)
 var basehostname string
-var scrape_results = make(map[string]string)
+var scrape_results = make(map[string]URLData)
 var wg sync.WaitGroup
 
 func parse_html(n *html.Node) {
 	if n.Type == html.ElementNode && n.Data == "a" {
 		for _, element := range n.Attr {
 			if element.Key == "href" {
-				fmt.Printf("LINK: %s\n", element.Val)
-
 				wg.Add(1)
 				go spider(element.Val)
 			}
@@ -28,16 +34,14 @@ func parse_html(n *html.Node) {
 	}
 }
 
-func spider(url string) {
-    fmt.Printf("running spider func in a goroutine")
-    
+func spider(url string) {    
     _, present := scrape_results[url]
     fmt.Printf("\npresent %r\n", present)
     if (present) {
     	wg.Done()
     	return
     } else {
-    	scrape_results[url] = ""
+    	scrape_results[url] = URLData{}
     }
 
     messages <- "spidering " + url + "<br />"
@@ -54,7 +58,9 @@ func spider(url string) {
     } else {
     	doc, _ := html.Parse(response.Body)
     	//scrape_results[url] = doc.Data
-    	fmt.Printf("%s", doc)
+    	data,_ := ioutil.ReadAll(response.Body)
+    	fmt.Printf("DATA: %s\n", data)
+    	scrape_results[url] = URLData{url, doc.Data, response.StatusCode, len(data)}
     	parse_html(doc)
     }
     wg.Done()
@@ -69,7 +75,6 @@ func (c App) Index() revel.Result {
 }
 
 func (c App) StartSpider(url string) revel.Result {
-	fmt.Printf("%s\n", url)
 	parsed_url, _ := urlhelpers.Parse(url)
 	basehostname = parsed_url.Host
 	wg.Add(1)
@@ -89,12 +94,14 @@ func (c App) SpiderDone() revel.Result {
 
 type StandardResult struct {
     URL        string
+    StatusCode int
+    ContentLength int
 }
 
 func (c App) View() revel.Result {
 	container := []StandardResult{}
-	for k, _ := range scrape_results { 
-		res := StandardResult{k}
+	for k, v := range scrape_results { 
+		res := StandardResult{k, v.StatusCode, v.ContentLength}
 		container = append(container, res)
 	}
 	return c.Render(container)
