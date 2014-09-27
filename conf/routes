@@ -10,6 +10,7 @@ GET     /spider_status                          App.SpiderStatus
 GET     /spider_done                            App.SpiderDone
 GET     /view                                   App.View
 GET     /view/internal                          App.ViewInternal
+GET     /view/external                          App.ViewExternal
 
 # Ignore favicon requests
 GET     /favicon.ico                            404

@@ -8,6 +8,7 @@ import "code.google.com/p/go.net/html"
 import "sync"
 import "io/ioutil"
 import "bytes"
+import "strings"
 
 type URLData struct {
     URL        string
@@ -35,9 +36,15 @@ func parse_html(n *html.Node) {
 	}
 }
 
-func spider(url string) {    
+func spider(url string) { 
+	if ! strings.HasPrefix(url, "http") {
+    	if ! strings.HasPrefix(url, "/") {
+    		url = "/" + url
+    	}
+    	url = "http://" + basehostname + url
+    }
+   
     _, present := scrape_results[url]
-    fmt.Printf("\npresent %r\n", present)
     if (present) {
     	wg.Done()
     	return
@@ -47,11 +54,7 @@ func spider(url string) {
 
     messages <- "spidering " + url + "<br />"
 
-    url_host, _ := urlhelpers.Parse(url)
-    if (url_host.Host != basehostname) {
-    	wg.Done()
-    	return
-    }
+    
 
     response, err := http.Get(url)
     if err != nil {
@@ -60,9 +63,14 @@ func spider(url string) {
     	data,_ := ioutil.ReadAll(response.Body)
     	doc, _ := html.Parse(bytes.NewReader(data))
     	//scrape_results[url] = doc.Data
-    	
-    	fmt.Printf("DATA: %s\n", data)
-    	scrape_results[url] = URLData{url, doc.Data, response.StatusCode, len(data)}
+       	scrape_results[url] = URLData{url, doc.Data, response.StatusCode, len(data)}
+
+    	url_host, _ := urlhelpers.Parse(url)
+	    if (url_host.Host != basehostname) {
+	    	wg.Done()
+	    	return
+	    }
+
     	parse_html(doc)
     }
     wg.Done()
@@ -77,6 +85,13 @@ func (c App) Index() revel.Result {
 }
 
 func (c App) StartSpider(url string) revel.Result {
+    if ! strings.HasPrefix(url, "http") {
+    	if ! strings.HasPrefix(url, "/") {
+    		url = "/" + url
+    	}
+    	url = "http://" + basehostname + url
+    }
+
 	parsed_url, _ := urlhelpers.Parse(url)
 	basehostname = parsed_url.Host
 	wg.Add(1)
@@ -94,27 +109,33 @@ func (c App) SpiderDone() revel.Result {
 	return c.RenderText("spidering is complete")
 }
 
-type StandardResult struct {
-    URL        string
-    StatusCode int
-    ContentLength int
-}
-
 func (c App) View() revel.Result {
-	container := []StandardResult{}
-	for k, v := range scrape_results { 
-		res := StandardResult{k, v.StatusCode, v.ContentLength}
+	container := []URLData{}
+	for _, v := range scrape_results { 
+		res := v
 		container = append(container, res)
 	}
 	return c.Render(container)
 }
 
 func (c App) ViewInternal() revel.Result {
-	container := []StandardResult{}
+	container := []URLData{}
 	for k, v := range scrape_results { 
 		url_host, _ := urlhelpers.Parse(k)
     	if (url_host.Host == basehostname) {
-    		res := StandardResult{k, v.StatusCode, v.ContentLength}
+    		res := v
+		    container = append(container, res)
+     	}		
+	}
+	return c.Render(container)
+}
+
+func (c App) ViewExternal() revel.Result {
+	container := []URLData{}
+	for k, v := range scrape_results { 
+		url_host, _ := urlhelpers.Parse(k)
+    	if (url_host.Host != basehostname) {
+    		res := v
 		    container = append(container, res)
      	}		
 	}
