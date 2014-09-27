@@ -9,6 +9,7 @@ POST    /spider                                 App.StartSpider
 GET     /spider_status                          App.SpiderStatus
 GET     /spider_done                            App.SpiderDone
 GET     /view                                   App.View
+GET     /view/internal                          App.ViewInternal
 
 # Ignore favicon requests
 GET     /favicon.ico                            404

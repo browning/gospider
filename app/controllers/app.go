@@ -7,6 +7,7 @@ import urlhelpers "net/url"
 import "code.google.com/p/go.net/html"
 import "sync"
 import "io/ioutil"
+import "bytes"
 
 type URLData struct {
     URL        string
@@ -56,9 +57,10 @@ func spider(url string) {
     if err != nil {
         fmt.Printf("%s", err)
     } else {
-    	doc, _ := html.Parse(response.Body)
-    	//scrape_results[url] = doc.Data
     	data,_ := ioutil.ReadAll(response.Body)
+    	doc, _ := html.Parse(bytes.NewReader(data))
+    	//scrape_results[url] = doc.Data
+    	
     	fmt.Printf("DATA: %s\n", data)
     	scrape_results[url] = URLData{url, doc.Data, response.StatusCode, len(data)}
     	parse_html(doc)
@@ -106,3 +108,17 @@ func (c App) View() revel.Result {
 	}
 	return c.Render(container)
 }
+
+func (c App) ViewInternal() revel.Result {
+	container := []StandardResult{}
+	for k, v := range scrape_results { 
+		url_host, _ := urlhelpers.Parse(k)
+    	if (url_host.Host == basehostname) {
+    		res := StandardResult{k, v.StatusCode, v.ContentLength}
+		    container = append(container, res)
+     	}		
+	}
+	return c.Render(container)
+}
+
+
