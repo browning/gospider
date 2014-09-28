@@ -15,6 +15,8 @@ type URLData struct {
     Body       string
     StatusCode int
     ContentLength int
+    MetaDesc string
+    MetaRobots string
 }
 
 var messages = make(chan string)
@@ -22,7 +24,7 @@ var basehostname string
 var scrape_results = make(map[string]URLData)
 var wg sync.WaitGroup
 
-func parse_html(n *html.Node) {
+func parse_html(url string, n *html.Node) {
 	if n.Type == html.ElementNode && n.Data == "a" {
 		for _, element := range n.Attr {
 			if element.Key == "href" {
@@ -31,8 +33,31 @@ func parse_html(n *html.Node) {
 			}
 		}
 	}
+
+	if n.Type == html.ElementNode && n.Data == "meta" {
+		for _, element := range n.Attr {
+			if element.Key == "name" && element.Val == "description" {
+				for _, e2 := range n.Attr {
+					if e2.Key == "content" {
+						x := scrape_results[url]
+						x.MetaDesc = e2.Val
+						scrape_results[url] = x
+					}
+				}
+			}
+			if element.Key == "name" && element.Val == "robots" {
+				for _, e2 := range n.Attr {
+					if e2.Key == "content" {
+						x := scrape_results[url]
+						x.MetaDesc = e2.Val
+						scrape_results[url] = x
+					}
+				}
+			}
+		}
+	}
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		parse_html(c)
+		parse_html(url, c)
 	}
 }
 
@@ -43,7 +68,7 @@ func spider(url string) {
     	}
     	url = "http://" + basehostname + url
     }
-   
+
     _, present := scrape_results[url]
     if (present) {
     	wg.Done()
@@ -63,7 +88,7 @@ func spider(url string) {
     	data,_ := ioutil.ReadAll(response.Body)
     	doc, _ := html.Parse(bytes.NewReader(data))
     	//scrape_results[url] = doc.Data
-       	scrape_results[url] = URLData{url, doc.Data, response.StatusCode, len(data)}
+       	scrape_results[url] = URLData{url, doc.Data, response.StatusCode, len(data), "", ""}
 
     	url_host, _ := urlhelpers.Parse(url)
 	    if (url_host.Host != basehostname) {
@@ -71,7 +96,7 @@ func spider(url string) {
 	    	return
 	    }
 
-    	parse_html(doc)
+    	parse_html(url, doc)
     }
     wg.Done()
 }

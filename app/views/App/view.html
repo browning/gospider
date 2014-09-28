@@ -29,6 +29,8 @@
                             <th>URL</th>
                             <th>Status Code</th>
                             <th>Content Length</th>
+                            <th>Meta Description</th>
+                            <th>Meta Robots</th>
                         </tr>
         </thead>
     	{{range .container}}
@@ -37,6 +39,8 @@
 		<td>{{.URL}}</td>
 		<td>{{.StatusCode}}</td>
 		<td>{{.ContentLength}}</td>
+		<td>{{.MetaDesc}}</td>
+		<td>{{.MetaRobots}}</td>
 		</tr>
 		{{end}}
     </table>
