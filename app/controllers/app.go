@@ -9,6 +9,7 @@ import "sync"
 import "io/ioutil"
 import "bytes"
 import "strings"
+import "github.com/temoto/robotstxt.go"
 
 type URLData struct {
     URL        string
@@ -23,6 +24,7 @@ var messages = make(chan string)
 var basehostname string
 var scrape_results = make(map[string]URLData)
 var wg sync.WaitGroup
+var robots *robotstxt.RobotsData
 
 func parse_html(url string, n *html.Node) {
 	if n.Type == html.ElementNode && n.Data == "a" {
@@ -79,7 +81,11 @@ func spider(url string) {
 
     messages <- "spidering " + url + "<br />"
 
-    
+    url_host, _ := urlhelpers.Parse(url)
+    if ! robots.TestAgent(url_host.Path, "spideryBot") {
+    	wg.Done()
+    	return
+    }
 
     response, err := http.Get(url)
     if err != nil {
@@ -109,7 +115,17 @@ func (c App) Index() revel.Result {
 	return c.Render()
 }
 
-func (c App) StartSpider(url string) revel.Result {
+func (c App) StartSpider(url string, obey_robots string) revel.Result {
+	if obey_robots == "obey_robots" {
+		resp, err := http.Get(url + "/robots.txt")
+		// parse robots.txt here and store 
+		robots, err = robotstxt.FromResponse(resp)
+		resp.Body.Close()
+		if err != nil {
+    		fmt.Print("Error parsing robots.txt:", err.Error())
+		}
+	}
+
     if ! strings.HasPrefix(url, "http") {
     	if ! strings.HasPrefix(url, "/") {
     		url = "/" + url
