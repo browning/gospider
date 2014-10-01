@@ -18,6 +18,7 @@ type URLData struct {
     ContentLength int
     MetaDesc string
     MetaRobots string
+    ContentType string
 }
 
 var messages = make(chan string)
@@ -94,7 +95,7 @@ func spider(url string) {
     	data,_ := ioutil.ReadAll(response.Body)
     	doc, _ := html.Parse(bytes.NewReader(data))
     	//scrape_results[url] = doc.Data
-       	scrape_results[url] = URLData{url, doc.Data, response.StatusCode, len(data), "", ""}
+       	scrape_results[url] = URLData{url, doc.Data, response.StatusCode, len(data), "", "", response.Header.Get("Content-Type")}
 
     	url_host, _ := urlhelpers.Parse(url)
 	    if (url_host.Host != basehostname) {
@@ -176,6 +177,17 @@ func (c App) ViewExternal() revel.Result {
 	for k, v := range scrape_results { 
 		url_host, _ := urlhelpers.Parse(k)
     	if (url_host.Host != basehostname) {
+    		res := v
+		    container = append(container, res)
+     	}		
+	}
+	return c.Render(container)
+}
+
+func (c App) ViewImages() revel.Result {
+	container := []URLData{}
+	for _, v := range scrape_results { 
+    	if (strings.Contains(v.ContentType, "image")) {
     		res := v
 		    container = append(container, res)
      	}		
