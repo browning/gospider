@@ -5,9 +5,30 @@
 
 <script>
 	$( document ).ready(function() {
-		$('#spiderdata').dataTable( {
+		var table = $('#spiderdata').dataTable( {
             "scrollX": true
     	} );
+
+
+ 
+    $('#spiderdata tbody').on( 'click', 'tr', function () {
+        if ( $(this).hasClass('selected') ) {
+            $(this).removeClass('selected');
+
+        }
+        else {
+            table.$('tr.selected').removeClass('selected');
+            $(this).addClass('selected');
+            var img_url = $(this).find('td')[0].innerText;
+            $.get( "/image_details?url=" + img_url, function( data ) {
+              $( ".details" ).html( data );
+              $("#imgdetails").dataTable( {
+                "scrollX": true
+              });
+           });
+        }
+    } );
+ 
 	});
 </script>
 <br /><br />
@@ -33,6 +54,7 @@
                             <th>Content Length</th>
                         </tr>
         </thead>
+        <tbody>
     	{{range .container}}
 
 		<tr>
@@ -41,8 +63,12 @@
 		<td>{{.ContentLength}}</td>
 		</tr>
 		{{end}}
+    </tbody>
     </table>
 
+  </div>
+
+  <div class="details">
   </div>
 </div>
 

@@ -1,0 +1,23 @@
+  
+<h2>Image Details</h2>
+  <table id="imgdetails" class="table">
+    	<thead>
+                        <tr>
+                            <th>linking page</th>
+                            <th>Alt Text</th>
+                            <th>Width</th>
+                            <th>Height</th>
+                        </tr>
+        </thead>
+        <tbody>
+    	{{range .container}}
+
+		<tr>
+		<td>{{.BaseUrl}}</td>
+		<td>{{.AltText}}</td>
+		<td>{{.Width}}</td>
+		<td>{{.Height}}</td>
+		</tr>
+		{{end}}
+    </tbody>
+    </table>

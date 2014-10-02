@@ -10,6 +10,7 @@ import "io/ioutil"
 import "bytes"
 import "strings"
 import "github.com/temoto/robotstxt.go"
+import "github.com/PuerkitoBio/goquery"
 
 type URLData struct {
     URL        string
@@ -21,9 +22,18 @@ type URLData struct {
     ContentType string
 }
 
+type ImageLink struct {
+	Src string
+	BaseUrl string
+	AltText string
+	Width string
+	Height string
+}
+
 var messages = make(chan string)
 var basehostname string
 var scrape_results = make(map[string]URLData)
+var image_links = make(map[string][]ImageLink)
 var wg sync.WaitGroup
 var robots *robotstxt.RobotsData
 
@@ -103,9 +113,26 @@ func spider(url string) {
 	    	return
 	    }
 
+	    parse_images(url, data)
     	parse_html(url, doc)
     }
     wg.Done()
+}
+
+func parse_images(url string, data []byte) {
+	reader := bytes.NewReader(data)
+	doc, _ := goquery.NewDocumentFromReader(reader)
+	doc.Find("img").Each(func(i int, s *goquery.Selection) {
+	    src, _ := s.Attr("src")
+	    alt, _ := s.Attr("alt")
+	    height, _ := s.Attr("height")
+	    width, _ := s.Attr("width")
+	    wg.Add(1)
+	    go spider(src)
+
+	    fmt.Printf("IMAGE %d: %s\n", i, src)
+	    image_links[src] = append(image_links[src], ImageLink{src, url, alt, height, width})
+  	})
 }
 
 type App struct {
@@ -192,6 +219,11 @@ func (c App) ViewImages() revel.Result {
 		    container = append(container, res)
      	}		
 	}
+	return c.Render(container)
+}
+
+func (c App) ImageDetails(url string) revel.Result {
+	container := image_links[url]
 	return c.Render(container)
 }
 
