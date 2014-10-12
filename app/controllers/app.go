@@ -211,12 +211,26 @@ func (c App) ViewExternal() revel.Result {
 	return c.Render(container)
 }
 
+type ImgData struct {
+    URL        string
+    StatusCode int
+    ContentLength int
+    NumLinks int
+    NumMissingAlts int
+}
+
 func (c App) ViewImages() revel.Result {
-	container := []URLData{}
+	container := []ImgData{}
 	for _, v := range scrape_results { 
     	if (strings.Contains(v.ContentType, "image")) {
     		res := v
-		    container = append(container, res)
+    		alt_count := 0
+    		for _, item := range image_links[res.URL] {
+    			if len(item.AltText) <= 0 {
+    				alt_count = alt_count + 1
+    			}
+    		}
+		    container = append(container, ImgData{res.URL, res.StatusCode, res.ContentLength, len(image_links[res.URL]), alt_count})
      	}		
 	}
 	return c.Render(container)

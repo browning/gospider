@@ -52,15 +52,19 @@
                             <th>URL</th>
                             <th>Status Code</th>
                             <th>Content Length</th>
+                            <th># of pages linking to image</th>
+                            <th># of missing alt texts</th>
                         </tr>
         </thead>
         <tbody>
     	{{range .container}}
 
 		<tr>
-		<td>{{.URL}}</td>
+		<td><a href="{{.URL}}">{{.URL}}</a></td>
 		<td>{{.StatusCode}}</td>
 		<td>{{.ContentLength}}</td>
+    <td>{{.NumLinks}}</td>
+    <td>{{.NumMissingAlts}}</td>
 		</tr>
 		{{end}}
     </tbody>
