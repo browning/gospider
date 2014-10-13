@@ -202,7 +202,8 @@ func (c App) View() revel.Result {
 		res.NumLinks = len(page_links[res.URL])
 		container = append(container, res)
 	}
-	return c.Render(container)
+	PageName := "all"
+	return c.Render(container, PageName)
 }
 
 func (c App) ViewInternal() revel.Result {
@@ -214,7 +215,10 @@ func (c App) ViewInternal() revel.Result {
 		    container = append(container, res)
      	}		
 	}
-	return c.Render(container)
+	PageName := "internal"
+	c.RenderArgs["PageName"] = PageName
+	c.RenderArgs["container"] = container
+	return c.RenderTemplate("App/view.html")
 }
 
 func (c App) ViewExternal() revel.Result {
@@ -226,7 +230,9 @@ func (c App) ViewExternal() revel.Result {
 		    container = append(container, res)
      	}		
 	}
-	return c.Render(container)
+	c.RenderArgs["PageName"] = "external"
+	c.RenderArgs["container"] = container
+	return c.RenderTemplate("App/view.html")
 }
 
 type ImgData struct {
