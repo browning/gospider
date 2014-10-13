@@ -5,9 +5,30 @@
 
 <script>
 	$( document ).ready(function() {
-		$('#spiderdata').dataTable( {
+
+		var table = $('#spiderdata').dataTable( {
             "scrollX": true
     	} );
+
+     $('#spiderdata tbody').on( 'click', 'tr', function () {
+        if ( $(this).hasClass('selected') ) {
+            $(this).removeClass('selected');
+
+        }
+        else {
+            table.$('tr.selected').removeClass('selected');
+            $(this).addClass('selected');
+            var img_url = $(this).find('td')[0].innerText;
+            $.get( "/page_details?url=" + encodeURIComponent(img_url), function( data ) {
+              $( ".details" ).html( data );
+              $("#pagedetails").dataTable( {
+                "scrollX": true
+              });
+           });
+        }
+    } );
+
+
 	});
 </script>
 <br /><br />
@@ -30,9 +51,11 @@
                             <th>URL</th>
                             <th>Status Code</th>
                             <th>Content Length</th>
+                            <th># of Linking Pages</th>
                             <th>Meta Description</th>
                             <th>Meta Robots</th>
                             <th>Content Type</th>
+                            
                         </tr>
         </thead>
     	{{range .container}}
@@ -41,15 +64,21 @@
 		<td>{{.URL}}</td>
 		<td>{{.StatusCode}}</td>
 		<td>{{.ContentLength}}</td>
+    <td>{{.NumLinks}}</td>
 		<td>{{.MetaDesc}}</td>
 		<td>{{.MetaRobots}}</td>
-		<td>{{.ContentType}}
+		<td>{{.ContentType}}</td>
 		</tr>
 		{{end}}
     </table>
 
   </div>
+
+  <div class="details">
+  </div>
 </div>
+
+
 
 {{template "footer.html" .}}
 

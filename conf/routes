@@ -13,6 +13,7 @@ GET     /view/internal                          App.ViewInternal
 GET     /view/external                          App.ViewExternal
 GET     /view/images                            App.ViewImages
 GET     /image_details                          App.ImageDetails
+GET     /page_details                           App.PageDetails
 
 # Ignore favicon requests
 GET     /favicon.ico                            404

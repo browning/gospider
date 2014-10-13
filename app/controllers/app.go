@@ -20,6 +20,7 @@ type URLData struct {
     MetaDesc string
     MetaRobots string
     ContentType string
+    NumLinks int
 }
 
 type ImageLink struct {
@@ -30,21 +31,37 @@ type ImageLink struct {
 	Height string
 }
 
+type PageLink struct {
+	HREF string
+	AnchorText string
+	Follow bool
+}
+
 var messages = make(chan string)
 var basehostname string
 var scrape_results = make(map[string]URLData)
 var image_links = make(map[string][]ImageLink)
+var page_links = make(map[string][]PageLink)
 var wg sync.WaitGroup
 var robots *robotstxt.RobotsData
 
 func parse_html(url string, n *html.Node) {
 	if n.Type == html.ElementNode && n.Data == "a" {
+		href := ""
+		anchor_text := ""
+		if n.FirstChild != nil {
+			anchor_text = strings.TrimSpace(n.FirstChild.Data)
+	    }
 		for _, element := range n.Attr {
 			if element.Key == "href" {
 				wg.Add(1)
+				href = element.Val
 				go spider(element.Val)
 			}
 		}
+
+	    page_links[href] = append(page_links[href], PageLink{url, anchor_text, false})
+
 	}
 
 	if n.Type == html.ElementNode && n.Data == "meta" {
@@ -105,7 +122,7 @@ func spider(url string) {
     	data,_ := ioutil.ReadAll(response.Body)
     	doc, _ := html.Parse(bytes.NewReader(data))
     	//scrape_results[url] = doc.Data
-       	scrape_results[url] = URLData{url, doc.Data, response.StatusCode, len(data), "", "", response.Header.Get("Content-Type")}
+       	scrape_results[url] = URLData{url, doc.Data, response.StatusCode, len(data), "", "", response.Header.Get("Content-Type"), 0}
 
     	url_host, _ := urlhelpers.Parse(url)
 	    if (url_host.Host != basehostname) {
@@ -182,6 +199,7 @@ func (c App) View() revel.Result {
 	container := []URLData{}
 	for _, v := range scrape_results { 
 		res := v
+		res.NumLinks = len(page_links[res.URL])
 		container = append(container, res)
 	}
 	return c.Render(container)
@@ -238,6 +256,11 @@ func (c App) ViewImages() revel.Result {
 
 func (c App) ImageDetails(url string) revel.Result {
 	container := image_links[url]
+	return c.Render(container)
+}
+
+func (c App) PageDetails(url string) revel.Result {
+	container := page_links[url]
 	return c.Render(container)
 }
 

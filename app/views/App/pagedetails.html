@@ -1,0 +1,21 @@
+  
+<h2>Link Details</h2>
+  <table id="pagedetails" class="table">
+    	<thead>
+                        <tr>
+                            <th>HREF</th>
+                            <th>Anchor Text</th>
+                            <th>Follow</th>
+                        </tr>
+        </thead>
+        <tbody>
+    	{{range .container}}
+
+		<tr>
+		<td><a href="{{.HREF}}">{{.HREF}}</a></td>
+		<td>{{.AnchorText}}</td>
+		<td>{{.Follow}}</td>
+		</tr>
+		{{end}}
+    </tbody>
+    </table>
