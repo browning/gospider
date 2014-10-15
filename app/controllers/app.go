@@ -270,4 +270,29 @@ func (c App) PageDetails(url string) revel.Result {
 	return c.Render(container)
 }
 
+func (c App) Summary() revel.Result {
+	num_pages := len(scrape_results)
+	num_404s := 0
+	num_200s := 0
+	num_301s := 0
+	num_external := 0
+	num_internal := 0
+	for k, v := range scrape_results {
+		if v.StatusCode == 404 {
+			num_404s = num_404s + 1
+		} else if v.StatusCode == 200 {
+			num_200s = num_200s + 1
+		} else if v.StatusCode == 301 {
+			num_301s = num_301s + 1
+		}
+		url_host, _ := urlhelpers.Parse(k)
+    	if (url_host.Host == basehostname) {
+    		num_internal = num_internal +1
+     	} else {
+     		num_external = num_external + 1
+     	}
+	}
+	return c.Render(num_pages, num_404s, num_external, num_internal, num_200s, num_301s)
+}
+
 

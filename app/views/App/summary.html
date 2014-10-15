@@ -1,0 +1,70 @@
+{{set . "title" "Home"}}
+{{template "header.html" .}}
+
+<head>
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+
+        var data = google.visualization.arrayToDataTable([
+          ['Type', 'Number'],
+          ['External URLs',     {{.num_external}}],
+          ['Internal URLs',     {{.num_internal}}]
+        ]);
+
+        var options = {
+          title: 'External vs Internal Links'
+        };
+
+        var chart = new google.visualization.PieChart(document.getElementById('typepiechart'));
+
+        chart.draw(data, options);
+
+        var data2 = google.visualization.arrayToDataTable([
+          ['Http Code', 'Number'],
+          ['404',  {{.num_404s}}],
+          ['200',  {{.num_200s}}],
+          ['301',  {{.num_301s}}]
+        ]);
+
+        var options2 = {
+          title: 'Http Response Codes',
+          vAxis: {title: 'Number',  titleTextStyle: {color: 'red'}}
+        };
+
+        var chart2 = new google.visualization.BarChart(document.getElementById('statuschart'));
+
+        chart2.draw(data2, options2);
+      }
+    </script>
+</head>
+
+<div class="container">
+<br /><br />
+  <div class="row">
+    <ul class="nav nav-pills">
+  <li class="active"><a href="/summary">Summary</a></li>
+  <li><a href="/view">All</a></li>
+  <li><a  href="/view/internal">Internal URLs</a></li>
+  <li><a  href="/view/external">External URLs</a></li>
+  <li><a href="/view/images">Images</a></li>
+</ul>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <h3>{{.num_pages}} pages were spidered</h3>
+    
+      <div id="typepiechart"></div>
+    </div>
+
+    <div class="col-md-6">
+    <h3>There were {{.num_404s}} page(s) that returned 404</h3>
+      <div id="statuschart"></div>
+    </div>
+  </div>
+</div>
+
+{{template "footer.html" .}}
