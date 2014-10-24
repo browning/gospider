@@ -161,6 +161,10 @@ func (c App) Index() revel.Result {
 }
 
 func (c App) StartSpider(url string, obey_robots string) revel.Result {
+	scrape_results = make(map[string]URLData)
+	image_links = make(map[string][]ImageLink)
+	page_links = make(map[string][]PageLink)
+
 	if obey_robots == "obey_robots" {
 		resp, err := http.Get(url + "/robots.txt")
 		// parse robots.txt here and store 
