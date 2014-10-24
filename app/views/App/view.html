@@ -7,8 +7,8 @@
 	$( document ).ready(function() {
 
 		var table = $('#spiderdata').dataTable( {
-            "scrollX": true
-    	} );
+            "scrollX": true,
+             "autoWidth": false    	} );
 
      $('#spiderdata tbody').on( 'click', 'tr', function () {
         if ( $(this).hasClass('selected') ) {
@@ -49,7 +49,7 @@
     <table id="spiderdata" class="table">
     	<thead>
                         <tr>
-                            <th>URL</th>
+                            <th style="width:10px">URL</th>
                             <th>Status Code</th>
                             <th>Content Length</th>
                             <th># of Linking Pages</th>
@@ -62,7 +62,7 @@
     	{{range .container}}
 
 		<tr>
-		<td><a href="{{.URL}}">{{.URL}}</a></td>
+		<td style="width:10px"><a href="{{.URL}}">{{.URL}}</a></td>
 		<td>{{.StatusCode}}</td>
 		<td>{{.ContentLength}}</td>
     <td>{{.NumLinks}}</td>
