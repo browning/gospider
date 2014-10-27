@@ -37,7 +37,9 @@ type PageLink struct {
 	Follow bool
 }
 
-var messages = make(chan string)
+var NUM_GOROUTINES = 20
+var messages = make(chan string, 256)
+var to_scrape = make(chan string, 256)
 var basehostname string
 var scrape_results = make(map[string]URLData)
 var image_links = make(map[string][]ImageLink)
@@ -56,7 +58,7 @@ func parse_html(url string, n *html.Node) {
 			if element.Key == "href" {
 				wg.Add(1)
 				href = element.Val
-				go spider(element.Val)
+				to_scrape <- element.Val
 			}
 		}
 
@@ -91,49 +93,53 @@ func parse_html(url string, n *html.Node) {
 	}
 }
 
-func spider(url string) { 
-	if ! strings.HasPrefix(url, "http") {
-    	if ! strings.HasPrefix(url, "/") {
-    		url = "/" + url
-    	}
-    	url = "http://" + basehostname + url
-    }
-
-    _, present := scrape_results[url]
-    if (present) {
-    	wg.Done()
-    	return
-    } else {
-    	scrape_results[url] = URLData{}
-    }
-
-    messages <- "spidering " + url + "<br />"
-
-    url_host, _ := urlhelpers.Parse(url)
-    if ! robots.TestAgent(url_host.Path, "spideryBot") {
-    	wg.Done()
-    	return
-    }
-
-    response, err := http.Get(url)
-    if err != nil {
-        fmt.Printf("%s", err)
-    } else {
-    	data,_ := ioutil.ReadAll(response.Body)
-    	doc, _ := html.Parse(bytes.NewReader(data))
-    	//scrape_results[url] = doc.Data
-       	scrape_results[url] = URLData{url, doc.Data, response.StatusCode, len(data), "", "", response.Header.Get("Content-Type"), 0}
-
-    	url_host, _ := urlhelpers.Parse(url)
-	    if (url_host.Host != basehostname) {
-	    	wg.Done()
-	    	return
+func spider() { 
+	fmt.Printf("starting goroutine and waiting")
+	for url := range to_scrape {
+		fmt.Printf("got url in goroutine %s\n", url)
+		if ! strings.HasPrefix(url, "http") {
+	    	if ! strings.HasPrefix(url, "/") {
+	    		url = "/" + url
+	    	}
+	    	url = "http://" + basehostname + url
 	    }
 
-	    parse_images(url, data)
-    	parse_html(url, doc)
-    }
-    wg.Done()
+	    _, present := scrape_results[url]
+	    if (present) {
+	    	wg.Done()
+	    	continue
+	    } else {
+	    	scrape_results[url] = URLData{}
+	    }
+
+	    messages <- "spidering " + url + "<br />"
+
+	    url_host, _ := urlhelpers.Parse(url)
+	    if ! robots.TestAgent(url_host.Path, "spideryBot") {
+	    	wg.Done()
+	    	continue
+	    }
+	    response, err := http.Get(url)
+	    if err != nil {
+	        fmt.Printf("%s", err)
+	    } else {
+	    	data,_ := ioutil.ReadAll(response.Body)
+	    	doc, _ := html.Parse(bytes.NewReader(data))
+	    	//scrape_results[url] = doc.Data
+	       	scrape_results[url] = URLData{url, doc.Data, response.StatusCode, len(data), "", "", response.Header.Get("Content-Type"), 0}
+
+	    	url_host, _ := urlhelpers.Parse(url)
+		    if (url_host.Host != basehostname) {
+		    	wg.Done()
+		    	continue
+		    }
+
+		    parse_images(url, data)
+	    	parse_html(url, doc)
+	    }
+	    wg.Done()
+	}
+	fmt.Printf("spider is closing...")
 }
 
 func parse_images(url string, data []byte) {
@@ -145,7 +151,7 @@ func parse_images(url string, data []byte) {
 	    height, _ := s.Attr("height")
 	    width, _ := s.Attr("width")
 	    wg.Add(1)
-	    go spider(src)
+	    to_scrape <- src
 
 	    fmt.Printf("IMAGE %d: %s\n", i, src)
 	    image_links[src] = append(image_links[src], ImageLink{src, url, alt, height, width})
@@ -161,6 +167,11 @@ func (c App) Index() revel.Result {
 }
 
 func (c App) StartSpider(url string, obey_robots string) revel.Result {
+	// Start up  goroutines as spider workers
+	for i := 0; i < NUM_GOROUTINES; i++ {
+        go spider()
+    }
+
 	scrape_results = make(map[string]URLData)
 	image_links = make(map[string][]ImageLink)
 	page_links = make(map[string][]PageLink)
@@ -185,7 +196,7 @@ func (c App) StartSpider(url string, obey_robots string) revel.Result {
 	parsed_url, _ := urlhelpers.Parse(url)
 	basehostname = parsed_url.Host
 	wg.Add(1)
-	go spider(url)
+	to_scrape <- url
 	return c.Render()
 }
 
