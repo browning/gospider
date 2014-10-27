@@ -62,6 +62,7 @@ func parse_html(url string, n *html.Node) {
 			}
 		}
 
+		//fmt.Printf("ADDING A PAGE LINK: %s\n", href)
 	    page_links[href] = append(page_links[href], PageLink{url, anchor_text, false})
 
 	}
@@ -109,6 +110,7 @@ func spider() {
 	    	wg.Done()
 	    	continue
 	    } else {
+	    	//fmt.Printf("ENTERING A NEW URLDATA FOR: %s\n", url)
 	    	scrape_results[url] = URLData{}
 	    }
 
@@ -121,7 +123,8 @@ func spider() {
 	    }
 	    response, err := http.Get(url)
 	    if err != nil {
-	        fmt.Printf("%s", err)
+	    	scrape_results[url] = URLData{url, "", -1, 0, "", "", "", 0}
+	        fmt.Printf("ERROR: %s\n", err)
 	    } else {
 	    	data,_ := ioutil.ReadAll(response.Body)
 	    	doc, _ := html.Parse(bytes.NewReader(data))
@@ -212,7 +215,8 @@ func (c App) SpiderDone() revel.Result {
 
 func (c App) View() revel.Result {
 	container := []URLData{}
-	for _, v := range scrape_results { 
+	for k, v := range scrape_results { 
+		fmt.Printf("scrape_results: v: %s: %s\n", k, v)
 		res := v
 		res.NumLinks = len(page_links[res.URL])
 		container = append(container, res)
