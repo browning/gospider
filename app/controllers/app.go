@@ -63,6 +63,7 @@ func parse_html(url string, n *html.Node) {
 		}
 
 		//fmt.Printf("ADDING A PAGE LINK: %s\n", href)
+		href = normalize_url(href)
 	    page_links[href] = append(page_links[href], PageLink{url, anchor_text, false})
 
 	}
