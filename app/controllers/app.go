@@ -37,7 +37,7 @@ type PageLink struct {
 	Follow bool
 }
 
-var NUM_GOROUTINES = 20
+var NUM_GOROUTINES = 40
 var messages = make(chan string, 256)
 var to_scrape = make(chan string, 256)
 var basehostname string
