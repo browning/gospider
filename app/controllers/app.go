@@ -156,7 +156,8 @@ func parse_images(url string, data []byte) {
 	    wg.Add(1)
 	    to_scrape <- src
 
-	    fmt.Printf("IMAGE %d: %s\n", i, src)
+	    fmt.Printf("IMAGE on page %s: %s\n", url, src)
+	    src = normalize_url(src)
 	    image_links[src] = append(image_links[src], ImageLink{src, url, alt, height, width})
   	})
 }
@@ -189,18 +190,23 @@ func (c App) StartSpider(url string, obey_robots string) revel.Result {
 		}
 	}
 
-    if ! strings.HasPrefix(url, "http") {
-    	if ! strings.HasPrefix(url, "/") {
-    		url = "/" + url
-    	}
-    	url = "http://" + basehostname + url
-    }
+    url = normalize_url(url)
 
 	parsed_url, _ := urlhelpers.Parse(url)
 	basehostname = parsed_url.Host
 	wg.Add(1)
 	to_scrape <- url
 	return c.Render()
+}
+
+func normalize_url(url string) string {
+	if ! strings.HasPrefix(url, "http") {
+    	if ! strings.HasPrefix(url, "/") {
+    		url = "/" + url
+    	}
+    	url = "http://" + basehostname + url
+    }
+    return url
 }
 
 func (c App) SpiderStatus() revel.Result {
