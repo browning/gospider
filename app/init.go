@@ -1,6 +1,9 @@
 package app
 
 import "github.com/revel/revel"
+import "github.com/skratchdot/open-golang/open"
+
+
 
 func init() {
 	// Filters is the default set of global filters.
@@ -23,6 +26,11 @@ func init() {
 	// ( order dependent )
 	// revel.OnAppStart(InitDB)
 	// revel.OnAppStart(FillCache)
+	// Create a link back to node-webkit using the environment variable
+	// populated by golang-nw's node-webkit code
+	revel.OnAppStart( func() { open.Run("http://localhost:9000")})
+
+	
 }
 
 // TODO turn this into revel.HeaderFilter
